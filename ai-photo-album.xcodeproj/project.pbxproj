@@ -6,13 +6,31 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3F108EC12F11E7A500473037 /* implementation_plan.md in Resources */ = {isa = PBXBuildFile; fileRef = 3F108EC02F11E7A500473037 /* implementation_plan.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		3F108EA02F11E72B00473037 /* ai-photo-album.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ai-photo-album.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F108EC02F11E7A500473037 /* implementation_plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = implementation_plan.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3F0499CE2F11E852004C1214 /* Exceptions for "ai-photo-album" folder in "ai-photo-album" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3F108E9F2F11E72B00473037 /* ai-photo-album */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3F108EA22F11E72B00473037 /* ai-photo-album */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3F0499CE2F11E852004C1214 /* Exceptions for "ai-photo-album" folder in "ai-photo-album" target */,
+			);
 			path = "ai-photo-album";
 			sourceTree = "<group>";
 		};
@@ -34,6 +52,7 @@
 			children = (
 				3F108EA22F11E72B00473037 /* ai-photo-album */,
 				3F108EA12F11E72B00473037 /* Products */,
+				3F108EC02F11E7A500473037 /* implementation_plan.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -109,6 +128,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F108EC12F11E7A500473037 /* implementation_plan.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -253,6 +273,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ai-photo-album/Info.plist";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "We need access to your files to add them to the AI albums!";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -284,6 +306,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ai-photo-album/Info.plist";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "We need access to your files to add them to the AI albums!";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
