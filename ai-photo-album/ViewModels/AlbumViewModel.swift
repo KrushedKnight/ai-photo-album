@@ -1,5 +1,6 @@
 import Photos
 import SwiftUI
+import Combine
 
 class AlbumViewModel: ObservableObject {
     @Published var albums: [PHAssetCollection] = []
