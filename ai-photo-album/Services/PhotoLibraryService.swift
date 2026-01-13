@@ -8,13 +8,23 @@ func requestPhotoLibraryAccess() async -> Bool {
 func fetchAlbums() -> [PHAssetCollection] {
     var albums: [PHAssetCollection] = []
 
-    let fetchResult = PHAssetCollection.fetchAssetCollections(
+    let userAlbums = PHAssetCollection.fetchAssetCollections(
         with: .album,
         subtype: .any,
         options: nil
     )
 
-    fetchResult.enumerateObjects { collection, _, _ in
+    userAlbums.enumerateObjects { collection, _, _ in
+        albums.append(collection)
+    }
+
+    let smartAlbums = PHAssetCollection.fetchAssetCollections(
+        with: .smartAlbum,
+        subtype: .any,
+        options: nil
+    )
+
+    smartAlbums.enumerateObjects { collection, _, _ in
         albums.append(collection)
     }
 

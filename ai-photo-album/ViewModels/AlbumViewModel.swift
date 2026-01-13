@@ -2,12 +2,12 @@ import Photos
 import SwiftUI
 import Combine
 
+@MainActor
 class AlbumViewModel: ObservableObject {
     @Published var albums: [PHAssetCollection] = []
     @Published var photos: [Photo] = []
 
     func loadAlbums() {
-        // Fetch albums using the service
         self.albums = fetchAlbums()
     }
 
