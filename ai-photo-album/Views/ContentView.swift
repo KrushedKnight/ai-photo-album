@@ -6,7 +6,10 @@ struct ContentView: View {
 
     var body: some View {
         NavigationView {
-            if viewModel.albums.isEmpty {
+            if viewModel.isProcessing {
+                Text("Processing album...")
+                    .font(.headline)
+            } else if viewModel.albums.isEmpty {
                 Text("Loading albums...")
                     .onAppear {
                         viewModel.loadAlbums()
@@ -14,8 +17,9 @@ struct ContentView: View {
             } else {
                 List(viewModel.albums, id: \.localIdentifier) { album in
                     Button(album.localizedTitle ?? "Untitled") {
-                        viewModel.selectAlbum(album)
-                        print("Imported \(viewModel.photos.count) photos")
+                        Task {
+                            await viewModel.selectAlbum(album)
+                        }
                     }
                 }
                 .navigationBarTitle("Select an Album", displayMode: .inline)
