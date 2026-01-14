@@ -92,11 +92,15 @@ struct PhotoImporter {
             }
 
             let data = observation.data
-            let count = data.count
+            let count = data.count / MemoryLayout<Float>.size
             var floatArray = [Float](repeating: 0, count: count)
 
-            for i in 0..<count {
-                floatArray[i] = data[i].floatValue
+            data.withUnsafeBytes { rawBuffer in
+                guard let baseAddress = rawBuffer.baseAddress else { return }
+                let floatBuffer = baseAddress.assumingMemoryBound(to: Float.self)
+                for i in 0..<count {
+                    floatArray[i] = floatBuffer[i]
+                }
             }
 
             return floatArray
