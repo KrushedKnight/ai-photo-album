@@ -4,27 +4,34 @@ import Accelerate
 
 func clusterPhotos(_ photos: [Photo], config: ClusteringConfig = .default) async -> [Event] {
     guard !photos.isEmpty else {
-        print("No photos to cluster")
         return []
     }
 
-    print("Starting clustering with \(photos.count) photos")
+    let photosWithVectors = photos.filter { $0.vector != nil }.count
+    print("📊 Clustering \(photos.count) photos, \(photosWithVectors) have vectors")
+
     var clusters = photos.map { singlePhotoCluster($0) }
 
+    var mergeCount = 0
     while clusters.count > 1 {
         let (idx1, idx2, dist) = closestClusters(clusters, photos, config)
-        print("Closest clusters: distance = \(dist), threshold = \(config.similarityThreshold)")
-        if dist > config.similarityThreshold { break }
+        print("🔍 Closest pair distance: \(dist), threshold: \(config.similarityThreshold)")
+
+        if dist > config.similarityThreshold {
+            print("❌ Distance exceeds threshold, stopping")
+            break
+        }
 
         let merged = merge(clusters[idx1], clusters[idx2])
         clusters.remove(at: max(idx1, idx2))
         clusters.remove(at: min(idx1, idx2))
         clusters.append(merged)
-        print("Merged clusters, now have \(clusters.count) clusters")
+        mergeCount += 1
     }
 
+    print("✅ Completed \(mergeCount) merges, \(clusters.count) clusters remain")
     let filtered = clusters.filter { $0.photos.count >= config.minClusterSize }
-    print("After filtering: \(filtered.count) events (from \(clusters.count) clusters)")
+    print("📦 After filtering (min size \(config.minClusterSize)): \(filtered.count) events")
     return filtered
 }
 
@@ -101,7 +108,13 @@ func distance(a: Photo, b: Photo, config: ClusteringConfig) -> Float {
     let time = timeDistance(a.timestamp, b.timestamp)
     let location = locationDistance(a.location, b.location)
 
-    return visual + config.timeWeight * time + config.locationWeight * location
+    let total = visual + config.timeWeight * time + config.locationWeight * location
+
+    if visual > 0.9 {
+        print("⚠️  High visual distance: visual=\(visual), time=\(time), location=\(location), total=\(total)")
+    }
+
+    return total
 }
 
 private func cosineDistance(_ v1: [Float]?, _ v2: [Float]?) -> Float {

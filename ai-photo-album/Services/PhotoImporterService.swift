@@ -35,6 +35,7 @@ struct PhotoImporter {
             photos.append(photo)
         }
 
+        var successCount = 0
         await withTaskGroup(of: (Int, [Float]?).self) { group in
             for (index, photo) in photos.enumerated() {
                 group.addTask {
@@ -45,19 +46,33 @@ struct PhotoImporter {
 
             for await (index, vector) in group {
                 photos[index].vector = vector
+                if vector != nil {
+                    successCount += 1
+                }
             }
         }
 
+        print("🎨 Generated \(successCount)/\(photos.count) feature vectors")
         return photos
     }
 
     private static func generateFeatureVector(for asset: PHAsset?) async -> [Float]? {
-        guard let asset = asset else { return nil }
+        guard let asset = asset else {
+            print("⚠️  No asset provided")
+            return nil
+        }
 
         let image = await loadImage(from: asset)
-        guard let image = image else { return nil }
+        guard let image = image else {
+            print("⚠️  Failed to load image from asset")
+            return nil
+        }
 
-        return await generateFeatureVector(from: image)
+        let vector = await generateFeatureVector(from: image)
+        if vector == nil {
+            print("⚠️  Failed to generate feature vector from image")
+        }
+        return vector
     }
 
     private static func loadImage(from asset: PHAsset) async -> UIImage? {
