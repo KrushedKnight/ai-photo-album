@@ -3,21 +3,29 @@ import CoreLocation
 import Accelerate
 
 func clusterPhotos(_ photos: [Photo], config: ClusteringConfig = .default) async -> [Event] {
-    guard !photos.isEmpty else { return [] }
+    guard !photos.isEmpty else {
+        print("No photos to cluster")
+        return []
+    }
 
+    print("Starting clustering with \(photos.count) photos")
     var clusters = photos.map { singlePhotoCluster($0) }
 
     while clusters.count > 1 {
         let (idx1, idx2, dist) = closestClusters(clusters, photos, config)
+        print("Closest clusters: distance = \(dist), threshold = \(config.similarityThreshold)")
         if dist > config.similarityThreshold { break }
 
         let merged = merge(clusters[idx1], clusters[idx2])
         clusters.remove(at: max(idx1, idx2))
         clusters.remove(at: min(idx1, idx2))
         clusters.append(merged)
+        print("Merged clusters, now have \(clusters.count) clusters")
     }
 
-    return clusters.filter { $0.photos.count >= config.minClusterSize }
+    let filtered = clusters.filter { $0.photos.count >= config.minClusterSize }
+    print("After filtering: \(filtered.count) events (from \(clusters.count) clusters)")
+    return filtered
 }
 
 private func singlePhotoCluster(_ photo: Photo) -> Event {

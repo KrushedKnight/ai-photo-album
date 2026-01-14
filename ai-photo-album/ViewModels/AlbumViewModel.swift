@@ -17,8 +17,10 @@ class AlbumViewModel: ObservableObject {
         isProcessing = true
 
         self.photos = await PhotoImporter.importFromAlbum(album)
+        print("Imported \(photos.count) photos")
 
         self.events = await clusterPhotos(photos)
+        print("Created \(events.count) events")
 
         isProcessing = false
     }
