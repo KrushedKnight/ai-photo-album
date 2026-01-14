@@ -7,7 +7,7 @@ class AlbumViewModel: ObservableObject {
     @Published var albums: [PHAssetCollection] = []
     @Published var photos: [Photo] = []
     @Published var isProcessing = false
-    @Published var clusters: [[Photo]] = []
+    @Published var events: [Event] = []
 
     func loadAlbums() {
         self.albums = fetchAlbums()
@@ -18,7 +18,7 @@ class AlbumViewModel: ObservableObject {
 
         self.photos = await PhotoImporter.importFromAlbum(album)
 
-        self.clusters = await clusterPhotos(photos)
+        self.events = await clusterPhotos(photos)
 
         isProcessing = false
     }
