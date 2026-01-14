@@ -9,6 +9,8 @@ struct ContentView: View {
             if viewModel.isProcessing {
                 Text("Processing album...")
                     .font(.headline)
+            } else if !viewModel.events.isEmpty {
+                EventListView(events: viewModel.events)
             } else if viewModel.albums.isEmpty {
                 Text("Loading albums...")
                     .onAppear {
