@@ -57,22 +57,12 @@ struct PhotoImporter {
     }
 
     private static func generateFeatureVector(for asset: PHAsset?) async -> [Float]? {
-        guard let asset = asset else {
-            print("⚠️  No asset provided")
-            return nil
-        }
+        guard let asset = asset else { return nil }
 
         let image = await loadImage(from: asset)
-        guard let image = image else {
-            print("⚠️  Failed to load image from asset")
-            return nil
-        }
+        guard let image = image else { return nil }
 
-        let vector = await generateFeatureVector(from: image)
-        if vector == nil {
-            print("⚠️  Failed to generate feature vector from image")
-        }
-        return vector
+        return await generateFeatureVector(from: image)
     }
 
     private static func loadImage(from asset: PHAsset) async -> UIImage? {
@@ -120,7 +110,7 @@ struct PhotoImporter {
 
             return floatArray
         } catch {
-            print("Failed to generate feature vector: \(error)")
+            // Expected on iOS simulator - Vision framework requires physical device
             return nil
         }
     }

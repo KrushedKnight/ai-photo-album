@@ -10,6 +10,10 @@ func clusterPhotos(_ photos: [Photo], config: ClusteringConfig = .default) async
     let photosWithVectors = photos.filter { $0.vector != nil }.count
     print("📊 Clustering \(photos.count) photos, \(photosWithVectors) have vectors")
 
+    if photosWithVectors == 0 {
+        print("ℹ️  No vectors available - using time+location clustering only (simulator mode)")
+    }
+
     var clusters = photos.map { singlePhotoCluster($0) }
 
     var mergeCount = 0
@@ -104,17 +108,17 @@ private func merge(_ c1: Event, _ c2: Event) -> Event {
 }
 
 func distance(a: Photo, b: Photo, config: ClusteringConfig) -> Float {
-    let visual = cosineDistance(a.vector, b.vector)
     let time = timeDistance(a.timestamp, b.timestamp)
     let location = locationDistance(a.location, b.location)
 
-    let total = visual + config.timeWeight * time + config.locationWeight * location
-
-    if visual > 0.9 {
-        print("⚠️  High visual distance: visual=\(visual), time=\(time), location=\(location), total=\(total)")
+    // If vectors are available, use full multi-modal distance
+    if a.vector != nil && b.vector != nil {
+        let visual = cosineDistance(a.vector, b.vector)
+        return visual + config.timeWeight * time + config.locationWeight * location
     }
 
-    return total
+    // Fallback for simulator: use only time + location (normalized to 0-1 range)
+    return (time + location) / 2.0
 }
 
 private func cosineDistance(_ v1: [Float]?, _ v2: [Float]?) -> Float {

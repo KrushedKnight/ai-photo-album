@@ -7,7 +7,7 @@ struct ClusteringConfig {
     let locationWeight: Float
 
     static let `default` = ClusteringConfig(
-        similarityThreshold: 0.99,
+        similarityThreshold: 0.42,
         minClusterSize: 3,
         timeWeight: 0.3,
         locationWeight: 0.2
