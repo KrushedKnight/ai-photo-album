@@ -6,13 +6,8 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		3F108EC12F11E7A500473037 /* implementation_plan.md in Resources */ = {isa = PBXBuildFile; fileRef = 3F108EC02F11E7A500473037 /* implementation_plan.md */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
 		3F108EA02F11E72B00473037 /* ai-photo-album.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ai-photo-album.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3F108EC02F11E7A500473037 /* implementation_plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = implementation_plan.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -52,7 +47,6 @@
 			children = (
 				3F108EA22F11E72B00473037 /* ai-photo-album */,
 				3F108EA12F11E72B00473037 /* Products */,
-				3F108EC02F11E7A500473037 /* implementation_plan.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -128,7 +122,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3F108EC12F11E7A500473037 /* implementation_plan.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
