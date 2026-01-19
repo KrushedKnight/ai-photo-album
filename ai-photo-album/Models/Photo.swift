@@ -8,4 +8,5 @@ struct Photo: Identifiable {
     let location: CLLocation
     let phAsset: PHAsset?
     var vector: [Float]?
+    var embeddings: PhotoEmbeddings?
 }

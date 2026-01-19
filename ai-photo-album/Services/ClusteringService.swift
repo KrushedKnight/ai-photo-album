@@ -58,31 +58,90 @@ func clusterPhotos(_ photos: [Photo], config: ClusteringConfig = .default) async
 
     let sortedPhotos = photos.sorted { $0.timestamp < $1.timestamp }
 
+    let maxPhotos = 250
+    let processedPhotos = sortedPhotos.count > maxPhotos ? Array(sortedPhotos.prefix(maxPhotos)) : sortedPhotos
+    if sortedPhotos.count > maxPhotos {
+        print("⚠️ Limiting to first \(maxPhotos) photos (from \(sortedPhotos.count) total)")
+    }
+
     var activeClusters: [ClusterBuilder] = []
+    var completedClusters: [ClusterBuilder] = []
     var assignedCount = 0
     var newClustersCount = 0
 
-    for photo in sortedPhotos {
+    for (index, photo) in processedPhotos.enumerated() {
+        print("\n🔍 Photo #\(index + 1) at \(formatTimestamp(photo.timestamp))")
+
+        // Log active clusters
+        print("   Active clusters: \(activeClusters.count)")
+        for cluster in activeClusters {
+            let timeDiff = photo.timestamp.timeIntervalSince(cluster.timeCentroid)
+            let distance = photo.location.distance(from: cluster.locationCentroid)
+            print("   - Cluster \(cluster.id.uuidString.prefix(8)): \(cluster.photos.count) photos, time diff: \(formatInterval(timeDiff)), distance: \(Int(distance))m")
+        }
+
+        // Filter eligible clusters
         let eligibleClusters = activeClusters.filter { cluster in
             isEligible(photo: photo, cluster: cluster, config: config)
         }
+        print("   Eligible clusters: \(eligibleClusters.count)")
 
-        if let bestCluster = findBestCluster(for: photo, among: eligibleClusters, config: config) {
-            bestCluster.addPhoto(photo)
+        // Calculate scores for all eligible clusters
+        var scores: [(cluster: ClusterBuilder, score: Double)] = []
+        for cluster in eligibleClusters {
+            let score = calculateAffinity(photo: photo, cluster: cluster, config: config)
+            scores.append((cluster, score))
+            print("   - Cluster \(cluster.id.uuidString.prefix(8)): score = \(String(format: "%.3f", score))")
+        }
+
+        // Sort by score descending
+        scores.sort { $0.score > $1.score }
+
+        // Find best cluster
+        let bestScore = scores.first?.score ?? 0.0
+        let secondBestScore = scores.count >= 2 ? scores[1].score : 0.0
+
+        if let best = scores.first, best.score > config.assignmentThreshold {
+            best.cluster.addPhoto(photo)
             assignedCount += 1
+            print("   ✅ ASSIGNED to cluster \(best.cluster.id.uuidString.prefix(8))")
+            print("   Best score: \(String(format: "%.3f", bestScore))")
+            if scores.count >= 2 {
+                print("   2nd best score: \(String(format: "%.3f", secondBestScore))")
+            }
         } else {
-            activeClusters.append(ClusterBuilder(firstPhoto: photo))
+            let newCluster = ClusterBuilder(firstPhoto: photo)
+            activeClusters.append(newCluster)
             newClustersCount += 1
+            print("   🆕 NEW CLUSTER \(newCluster.id.uuidString.prefix(8))")
+            print("   Best score: \(String(format: "%.3f", bestScore))")
+            if scores.count >= 2 {
+                print("   2nd best score: \(String(format: "%.3f", secondBestScore))")
+            }
+            if eligibleClusters.isEmpty {
+                print("   Reason: No eligible clusters (all outside time/location windows)")
+            } else if bestScore <= config.assignmentThreshold {
+                print("   Reason: Best score \(String(format: "%.3f", bestScore)) ≤ threshold \(String(format: "%.3f", config.assignmentThreshold))")
+            }
         }
 
-        activeClusters = activeClusters.filter { cluster in
-            abs(photo.timestamp.timeIntervalSince(cluster.timeCentroid)) <= config.maxTimeWindow
+        let (stillActive, nowCompleted) = activeClusters.reduce(into: ([ClusterBuilder](), [ClusterBuilder]())) { result, cluster in
+            let timeSinceEnd = photo.timestamp.timeIntervalSince(cluster.endTime)
+            if timeSinceEnd <= config.maxTimeWindow {
+                result.0.append(cluster)
+            } else {
+                result.1.append(cluster)
+            }
         }
+        activeClusters = stillActive
+        completedClusters.append(contentsOf: nowCompleted)
     }
 
     print("✅ Assigned \(assignedCount) photos, created \(newClustersCount) clusters")
+    print("📊 Completed clusters: \(completedClusters.count), still active: \(activeClusters.count)")
 
-    let allEvents = activeClusters.map { $0.toEvent() }
+    let allClusters = completedClusters + activeClusters
+    let allEvents = allClusters.map { $0.toEvent() }
     let filtered = allEvents.filter { $0.photos.count >= config.minClusterSize }
 
     print("📦 After filtering (min size \(config.minClusterSize)): \(filtered.count) events")
@@ -94,8 +153,19 @@ private func isEligible(
     cluster: ClusterBuilder,
     config: ClusteringConfig
 ) -> Bool {
-    let timeDelta = abs(photo.timestamp.timeIntervalSince(cluster.timeCentroid))
-    guard timeDelta <= config.maxTimeWindow else {
+    let timeToStart = photo.timestamp.timeIntervalSince(cluster.startTime)
+    let timeToEnd = photo.timestamp.timeIntervalSince(cluster.endTime)
+
+    let withinWindow: Bool
+    if timeToStart < 0 {
+        withinWindow = abs(timeToStart) <= config.maxTimeWindow
+    } else if timeToEnd > 0 {
+        withinWindow = timeToEnd <= config.maxTimeWindow
+    } else {
+        withinWindow = true
+    }
+
+    guard withinWindow else {
         return false
     }
 
@@ -149,4 +219,23 @@ private func findBestCluster(
     }
 
     return bestCluster
+}
+
+private func formatTimestamp(_ date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "MMM d, h:mm a"
+    return formatter.string(from: date)
+}
+
+private func formatInterval(_ interval: TimeInterval) -> String {
+    let absInterval = abs(interval)
+    let hours = Int(absInterval) / 3600
+    let minutes = Int(absInterval) % 3600 / 60
+    let sign = interval >= 0 ? "+" : "-"
+
+    if hours > 0 {
+        return "\(sign)\(hours)h \(minutes)m"
+    } else {
+        return "\(sign)\(minutes)m"
+    }
 }
