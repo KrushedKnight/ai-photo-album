@@ -8,6 +8,7 @@ class AlbumViewModel: ObservableObject {
     @Published var photos: [Photo] = []
     @Published var isProcessing = false
     @Published var events: [Event] = []
+    @Published var anchors: AnchorCollection = AnchorCollection()
 
     func loadAlbums() {
         self.albums = fetchAlbums()
@@ -18,6 +19,7 @@ class AlbumViewModel: ObservableObject {
 
         self.photos = await PhotoImporter.importFromAlbum(album)
         self.events = await clusterPhotos(photos)
+        self.anchors = await AnchorService.generateAnchors(from: photos)
 
         isProcessing = false
     }
