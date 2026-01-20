@@ -1,7 +1,7 @@
 import CoreLocation
 import Photos
 import Vision
-import UIKit
+internal import UIKit
 
 struct EmbeddingSuccessCounts {
     var visual: Int = 0

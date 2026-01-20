@@ -2,6 +2,8 @@ import Foundation
 import Vision
 import CoreGraphics
 import Photos
+internal import UIKit
+
 
 struct PersonClusteringResult {
     var persons: [UUID: Person]
@@ -55,9 +57,9 @@ struct PersonClusteringService {
                         descriptor: descriptor,
                         boundingBox: faceEmbedding.boundingBox,
                         captureQuality: faceEmbedding.captureQuality,
-                        pitch: faceEmbedding.landmarks.pitch,
-                        yaw: faceEmbedding.landmarks.yaw,
-                        roll: faceEmbedding.landmarks.roll,
+                        pitch: faceEmbedding.pitch,
+                        yaw: faceEmbedding.yaw,
+                        roll: faceEmbedding.roll,
                         confidence: 0.0
                     )
                     allFaceInstances.append(faceInstance)
@@ -147,8 +149,13 @@ struct PersonClusteringService {
             options.isNetworkAccessAllowed = true
             options.isSynchronous = false
 
+            guard let asset = photo.phAsset else {
+                continuation.resume(returning: nil)
+                return
+            }
+
             PHImageManager.default().requestImage(
-                for: photo.asset,
+                for: asset,
                 targetSize: PHImageManagerMaximumSize,
                 contentMode: .aspectFit,
                 options: options
