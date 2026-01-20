@@ -13,16 +13,26 @@ struct PersonClusteringService {
         from photos: [Photo],
         config: PersonClusteringConfig = .default
     ) async -> PersonClusteringResult {
+        print("👤 Starting person clustering...")
+        print("   Photos to process: \(photos.count)")
+
         var persons: [UUID: Person] = [:]
         var faces: [UUID: FaceInstance] = [:]
 
         var allFaceInstances: [FaceInstance] = []
+        var photosWithFaces = 0
+        var totalFaceEmbeddings = 0
+        var descriptorsGenerated = 0
+        var descriptorsFailed = 0
 
         for photo in photos {
             guard let faceEmbeddings = photo.embeddings?.faces,
                   !faceEmbeddings.isEmpty else {
                 continue
             }
+
+            photosWithFaces += 1
+            totalFaceEmbeddings += faceEmbeddings.count
 
             guard let cgImage = await loadCGImage(for: photo) else {
                 continue
@@ -51,11 +61,23 @@ struct PersonClusteringService {
                         confidence: 0.0
                     )
                     allFaceInstances.append(faceInstance)
+                    descriptorsGenerated += 1
+                } else {
+                    descriptorsFailed += 1
                 }
             }
         }
 
+        print("   Photos with faces: \(photosWithFaces)")
+        print("   Total face embeddings: \(totalFaceEmbeddings)")
+        print("   Descriptors generated: \(descriptorsGenerated)")
+        print("   Descriptors failed: \(descriptorsFailed)")
+
         let sortedFaces = allFaceInstances.sorted { $0.captureQuality > $1.captureQuality }
+        print("   Face instances to cluster: \(sortedFaces.count)")
+
+        var newPersonsCreated = 0
+        var facesAssigned = 0
 
         for var face in sortedFaces {
             if persons.isEmpty {
@@ -65,6 +87,7 @@ struct PersonClusteringService {
 
                 persons[person.id] = person
                 faces[face.id] = face
+                newPersonsCreated += 1
             } else {
                 var similarities: [(UUID, Float)] = []
 
@@ -93,6 +116,7 @@ struct PersonClusteringService {
                     )
 
                     faces[face.id] = face
+                    facesAssigned += 1
                 } else {
                     let person = createPerson(with: face)
                     face.personId = person.id
@@ -100,9 +124,15 @@ struct PersonClusteringService {
 
                     persons[person.id] = person
                     faces[face.id] = face
+                    newPersonsCreated += 1
                 }
             }
         }
+
+        print("   ✅ Person clustering complete:")
+        print("      Persons created: \(persons.count)")
+        print("      Faces assigned to existing: \(facesAssigned)")
+        print("      New persons from unmatched faces: \(newPersonsCreated)")
 
         return PersonClusteringResult(
             persons: persons,
@@ -181,22 +211,35 @@ struct PersonClusteringService {
         cgImage: CGImage,
         completion: @escaping ([Float]?) -> Void
     ) {
-        let faceprintRequest = VNGenerateFaceprintRequest()
+        let boundingBox = faceObservation.boundingBox
+        let width = CGFloat(cgImage.width)
+        let height = CGFloat(cgImage.height)
 
-        faceprintRequest.inputFaceObservations = [faceObservation]
+        let rect = CGRect(
+            x: boundingBox.origin.x * width,
+            y: (1 - boundingBox.origin.y - boundingBox.height) * height,
+            width: boundingBox.width * width,
+            height: boundingBox.height * height
+        )
 
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        guard let croppedImage = cgImage.cropping(to: rect) else {
+            completion(nil)
+            return
+        }
+
+        let featurePrintRequest = VNGenerateImageFeaturePrintRequest()
+        let handler = VNImageRequestHandler(cgImage: croppedImage, options: [:])
 
         do {
-            try handler.perform([faceprintRequest])
+            try handler.perform([featurePrintRequest])
 
-            guard let results = faceprintRequest.results,
-                  let faceprint = results.first else {
+            guard let results = featurePrintRequest.results,
+                  let featurePrint = results.first else {
                 completion(nil)
                 return
             }
 
-            let descriptor = extractDescriptor(from: faceprint)
+            let descriptor = extractDescriptor(from: featurePrint)
             completion(descriptor)
 
         } catch {
@@ -204,9 +247,9 @@ struct PersonClusteringService {
         }
     }
 
-    private static func extractDescriptor(from faceprint: VNFaceprint) -> [Float] {
-        let data = faceprint.data
-        let count = data.count / MemoryLayout<Float>.size
+    private static func extractDescriptor(from featurePrint: VNFeaturePrintObservation) -> [Float] {
+        let data = featurePrint.data
+        let count = featurePrint.elementCount
         var floatArray = [Float](repeating: 0, count: count)
 
         data.withUnsafeBytes { rawBufferPointer in

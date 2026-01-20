@@ -1,7 +1,7 @@
 import Foundation
 
 struct SceneGroupingResult {
-    var scenes: [UUID: Scene]
+    var scenes: [UUID: SceneAnchor]
     var photoScenes: [UUID: PhotoScene]
 }
 
@@ -10,7 +10,7 @@ struct SceneGroupingService {
         from photos: [Photo],
         config: SceneGroupingConfig = .default
     ) async -> SceneGroupingResult {
-        var scenes: [String: Scene] = [:]
+        var scenes: [String: SceneAnchor] = [:]
         var photoScenes: [UUID: PhotoScene] = [:]
 
         for photo in photos {
@@ -28,7 +28,7 @@ struct SceneGroupingService {
 
                 if scenes[identifier] == nil {
                     let category = categorizeScene(identifier: identifier)
-                    scenes[identifier] = Scene(
+                    scenes[identifier] = SceneAnchor(
                         identifier: identifier,
                         category: category,
                         photoCount: 0,

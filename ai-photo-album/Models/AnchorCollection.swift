@@ -16,7 +16,7 @@ struct AnchorCollection: Codable {
     var faces: [UUID: FaceInstance] = [:]
     var places: [UUID: Place] = [:]
     var photoPlaces: [UUID: PhotoPlace] = [:]
-    var scenes: [UUID: Scene] = [:]
+    var scenes: [UUID: SceneAnchor] = [:]
     var photoScenes: [UUID: PhotoScene] = [:]
     var stats: AnchorStats = AnchorStats()
 
@@ -25,7 +25,7 @@ struct AnchorCollection: Codable {
         faces: [UUID: FaceInstance] = [:],
         places: [UUID: Place] = [:],
         photoPlaces: [UUID: PhotoPlace] = [:],
-        scenes: [UUID: Scene] = [:],
+        scenes: [UUID: SceneAnchor] = [:],
         photoScenes: [UUID: PhotoScene] = [:],
         stats: AnchorStats = AnchorStats()
     ) {

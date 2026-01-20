@@ -4,7 +4,7 @@ import CoreLocation
 struct Place: Identifiable, Codable {
     let id: UUID
     var name: String?
-    let centroid: CLLocation
+    var centroid: CLLocation
     var radiusMeters: Double
     var visitCount: Int
     var photoCount: Int
@@ -90,7 +90,7 @@ struct Place: Identifiable, Codable {
 struct PhotoPlace: Identifiable, Codable {
     let id: UUID
     let photoId: UUID
-    let placeId: UUID
+    var placeId: UUID
     let distanceMeters: Double
     let confidence: Float
     let visitedAt: Date

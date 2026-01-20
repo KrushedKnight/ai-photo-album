@@ -1,4 +1,5 @@
 import Foundation
+internal import _LocationEssentials
 
 struct AnchorService {
     static func generateAnchors(

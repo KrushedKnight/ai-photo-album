@@ -11,7 +11,7 @@ enum SceneCategory: String, Codable {
     case other
 }
 
-struct Scene: Identifiable, Codable {
+struct SceneAnchor: Identifiable, Codable {
     let id: UUID
     let identifier: String
     var displayName: String
